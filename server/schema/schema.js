@@ -3,7 +3,7 @@ const _ = require("lodash");
 const Book = require("../models/book");
 const Author = require("../models/author");
 
-const { GraphQLObjectType, GraphQLString, GraphQLID, GraphQLInt, GraphQLList, GraphQLSchema } = graphql;
+const { GraphQLObjectType, GraphQLString, GraphQLID, GraphQLInt, GraphQLList, GraphQLNonNull, GraphQLSchema } = graphql;
 
 const BookType = new GraphQLObjectType({
     name: "Book",
@@ -14,12 +14,7 @@ const BookType = new GraphQLObjectType({
         author: {
             type: AuthorType,
             resolve: (parent, args) => {
-                // parent object contains all the book details, because RootQuery > book > the returned book contains name, genre id, authorId
-                console.log(parent);
-                console.log(parent.authorId);
-
-                // return the author whose id is the same as the required book's id:
-                return _.find(myAuthors, {id: parent.authorId})
+                return Author.findById(parent.authorId);
             }
         }
     })
@@ -34,7 +29,7 @@ const AuthorType = new GraphQLObjectType({
         books: {
             type: new GraphQLList(BookType),
             resolve: (parent, args) => {
-                // return _.filter(myBooks, { authorId: parent.id});
+                return Book.find({authorId: parent.id});
             }
         }
     })
@@ -47,26 +42,26 @@ const RootQuery = new GraphQLObjectType({
             type: BookType,     
             args: {id: {type: GraphQLID}},
             resolve(parent, args) {
-            //    return _.find(myBooks, {id: args.id});
+                return Book.findById(args.id);
             }
         },
         author: {
             type: AuthorType,
             args: {id: {type: GraphQLID}},
             resolve(parent, args) {
-                // return _.find(myAuthors, {id: args.id});
+               return Author.findById(args.id);
             }
         },
         books: {
             type: new GraphQLList(BookType),
             resolve(parent, args) {
-                // return myBooks;
+                return Book.find({});
             }
         },
         authors: {
             type: new GraphQLList(AuthorType),
             resolve(parent, args) {
-                // return myAuthors;
+                return Author.find({});
             }
         }
     }
@@ -80,8 +75,8 @@ const Mutations = new GraphQLObjectType({
             type: AuthorType,
             // What we expect to receive from the client:
             args: {
-                name: {type: GraphQLString},
-                age: {type: GraphQLInt}
+                name: {type: new GraphQLNonNull(GraphQLString)},
+                age: {type: new GraphQLNonNull(GraphQLInt)}
             },
             resolve(parent, args) {
                 // new object based on our mongoose model:
@@ -97,9 +92,9 @@ const Mutations = new GraphQLObjectType({
         addBook: {
             type: BookType,
             args: {
-                name: {type: GraphQLString},
-                genre: {type: GraphQLString},
-                authorId: {type: GraphQLID}
+                name: {type: new GraphQLNonNull(GraphQLString)},
+                genre: {type: new GraphQLNonNull(GraphQLString)},
+                authorId: {type: new GraphQLNonNull(GraphQLID)}
             },
             resolve(parent, args){
                 let book = new Book({
