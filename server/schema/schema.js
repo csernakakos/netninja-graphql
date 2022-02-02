@@ -1,31 +1,67 @@
 const graphql = require("graphql");
+const _ = require("lodash");
 
-const { GraphQLObjectType, GraphQLString, GraphQLSchema } = graphql;
+const myBooks = [
+    {name: "Rev Road", genre: "Drama", id: "1", authorId: "1"},
+    {name: "The Leftovers", genre: "Drama", id: "2", authorId: "2"},
+    {name: "Atonement", genre: "Theatre", id: "3", authorId: "3"},
+    {name: "The Leftovers II", genre: "Drama", id: "4", authorId: "2"},
+    {name: "The Other Book", genre: "Drama", id: "5", authorId: "2"},
+    {name: "Sunday", genre: "Theatre", id: "6", authorId: "2"},
+];
 
-// define new object type with fields id, name, genre
+const myAuthors = [
+    {name: "Terry P", age: 26, id: "1"},
+    {name: "Brandon S", age: 44, id: "2"},
+    {name: "Patrik R", age: 77, id: "3"},
+]
+
+const { GraphQLObjectType, GraphQLString, GraphQLID, GraphQLInt, GraphQLSchema } = graphql;
+
 const BookType = new GraphQLObjectType({
     name: "Book",
     fields: () => ({
-        id: {type: GraphQLString},
+        id: {type: GraphQLID},
         name: {type: GraphQLString},
-        genre: {type: GraphQLString}
+        genre: {type: GraphQLString},
+        author: {
+            type: AuthorType,
+            resolve: (parent, args) => {
+                // parent object contains all the book details, because RootQuery > book > the returned book contains name, genre id, authorId
+                console.log(parent);
+                console.log(parent.authorId);
+
+                // return the author whose id is the same as the required book's id:
+                return _.find(myAuthors, {id: parent.authorId})
+            }
+        }
     })
 });
 
-// define root query: how we jump into the graph
+const AuthorType = new GraphQLObjectType({
+    name: "Author",
+    fields: () => ({
+        id: {type: GraphQLID},
+        name: {type: GraphQLString},
+        age: {type: GraphQLInt}
+    })
+});
+
 const RootQuery = new GraphQLObjectType({
     name: "RootQueryType",
     fields: {
-        // the name matters! "book" will be the entry point to our query.
         book: {
-            type: BookType,
-            // mandatory arguments:
-            args: {id: {type: GraphQLString}},
+            type: BookType,     
+            args: {id: {type: GraphQLID}},
             resolve(parent, args) {
-                // code to get data from the database. This resolve function will be fired when the server receives a query.
-                // parent is for relationships between data
-                // args is what gives us access to arguments such as the id, which the client sends along with the query.
-
+               return _.find(myBooks, {id: args.id});
+            }
+        },
+        author: {
+            type: AuthorType,
+            args: {id: {type: GraphQLID}},
+            resolve(parent, args) {
+                return _.find(myAuthors, {id: args.id});
             }
         }
     }
