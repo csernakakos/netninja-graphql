@@ -1,31 +1,28 @@
-import React, {Component} from "react";
-import {ApolloClient, ApolloProvider, InMemoryCache} from "@apollo/client";
+import React, { Component } from 'react';
+import ApolloClient from 'apollo-boost';
+import { ApolloProvider } from 'react-apollo';
 
-//components
-import BookList from "./components/BookList";
-import AddBook from "./components/AddBook";
+// components
+import BookList from './components/BookList';
+import AddBook from './components/AddBook';
 
-// apollo settle:
+// apollo client setup
 const client = new ApolloClient({
-  uri: "http://localhost:4000/graphql",
-  cache: new InMemoryCache()
+    uri: 'http://localhost:4000/graphql'
 });
 
 class App extends Component {
-
   render() {
     return (
-      <ApolloProvider client={client}>
-        <div id="main">
-          <h1>Reading List</h1>
-          <BookList />
-          <AddBook />
-          <p>Made by Akos with love.</p>
-        </div>
-      </ApolloProvider>
+        <ApolloProvider client={client}>
+            <div id="main">
+                <h1>Ninja's Reading List</h1>
+                <BookList />
+                <AddBook />
+            </div>
+        </ApolloProvider>
     );
   }
-  
 }
 
 export default App;
